@@ -962,8 +962,14 @@ select * from pedido_produto_dados;
 -- autoincremento
 
 create table exemplo (
-	id serial primary key,
+	id serial primary key, -- a clausula SERIAL cria uma sequência automaticamente e associa essa sequência à coluna como padrão.
+                            -- entretanto, não é padronizado pelo padrão SQL ANSI e pode exigir ajustes manuais em caso de alterações na estrutura da tabela
+                            -- dessa forma, é recomendado o uso da clausula GENERATED ALWAYS AS IDENTITY para geração de campos sequenciais
 	nome varchar(50) not null
 );
 
-SELECT * FROM exemplo
+INSERT INTO exemplo (nome)
+VALUES ('exemplo 1'), ('exemplo 2'), ('exemplo 3');
+
+SELECT * FROM exemplo;
+
