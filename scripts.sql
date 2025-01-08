@@ -973,3 +973,35 @@ VALUES ('exemplo 1'), ('exemplo 2'), ('exemplo 3');
 
 SELECT * FROM exemplo;
 
+-- valores default
+
+ALTER TABLE pedido
+ALTER COLUMN data_pedido
+SET DEFAULT CURRENT_DATE;
+
+ALTER TABLE pedido
+ALTER COLUMN valor
+SET DEFAULT 0;
+
+INSERT INTO pedido (idcliente, idvendedor)
+VALUES (1,1);
+
+SELECT * from pedido ORDER BY id DESC;
+
+-- exercicios valores default
+
+-- 1. Adicione valores default na tabela de produtos do pedido
+-- a. Quantidade com o valor 1
+ALTER TABLE pedido_produto
+ALTER COLUMN quantidade
+SET DEFAULT 1;
+-- b. Valor unitário com o valor 0
+ALTER TABLE pedido_produto
+ALTER COLUMN valor_unitario
+SET DEFAULT 0;
+
+-- 2. Adicione valor default na tabela de produtos
+-- a. Valor com o valor 0
+ALTER TABLE produto
+ALTER COLUMN valor
+SET DEFAULT 0;
