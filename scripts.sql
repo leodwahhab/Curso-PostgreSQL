@@ -1020,12 +1020,7 @@ CREATE INDEX idx_prd_nome ON produto(nome);
 
 CREATE DATABASE biblioteca;
 
-DROP TABLE livro;
-DROP TABLE autor;
-DROP TABLE categoria;
-DROP TABLE editora;
-
-CREATE TABLE editora (
+CREATE TABLE IF NOT EXISTS editora (
     id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     nome VARCHAR(255) NOT NULL UNIQUE
 );
@@ -1033,7 +1028,7 @@ CREATE TABLE editora (
 INSERT INTO editora (nome)
 VALUES ('Bookman'), ('Edgard Blusher'), ('Nova Terra'), ('Brasport');
 
-CREATE TABLE categoria (
+CREATE TABLE IF NOT EXISTS categoria (
     id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     nome VARCHAR(255)
 );
@@ -1048,7 +1043,7 @@ ADD CONSTRAINT cat_nome_unique UNIQUE (nome);
 INSERT INTO categoria (nome)
 VALUES ('Banco de Dados'), ('HTML'), ('Java'), ('PHP');
 
-CREATE TABLE autor (
+CREATE TABLE IF NOT EXISTS autor (
     id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     nome VARCHAR(255) NOT NULL UNIQUE
 );
@@ -1056,7 +1051,7 @@ CREATE TABLE autor (
 INSERT INTO autor (nome)
 VALUES ('Waldemar Setzer'), ('Flávio Soares'), ('John Watson'), ('Rui Rossi dos Santos'), ('Antonio Pereira de Resende'), ('Claudiney Calixto Lima'), ('Evandro Carlos Teruel'), ('Ian Graham'), ('Fabrício Xavier'), ('Pablo Dalloglio');
 
-CREATE TABLE livro (
+CREATE TABLE IF NOT EXISTS livro (
     id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     id_editora INT NOT NULL,
     id_categoria INT NOT NULL,
@@ -1094,7 +1089,7 @@ VALUES
 
 SELECT * FROM livro;
 
-CREATE TABLE livro_autor (
+CREATE TABLE IF NOT EXISTS livro_autor (
     id_livro INT NOT NULL,
     id_autor INT NOT NULL,
     CONSTRAINT pk_lat_idlivroidautor PRIMARY KEY (id_livro, id_autor),
@@ -1135,7 +1130,7 @@ VALUES
         (SELECT id FROM livro WHERE nome = 'PHP com Programação Orientada a Objetos'), (SELECT id FROM autor WHERE nome = 'Pablo Dalloglio')
        );
 
-CREATE TABLE aluno (
+CREATE TABLE IF NOT EXISTS aluno (
     id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     nome VARCHAR(255) NOT NULL
 );
@@ -1144,7 +1139,7 @@ INSERT INTO aluno (nome)
 VALUES
     ('Mario'), ('João'), ('Paulo'), ('Pedro'), ('Maria');
 
-CREATE TABLE emprestimo (
+CREATE TABLE IF NOT EXISTS emprestimo (
     id INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     id_aluno INT NOT NULL,
     data_emprestimo DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -1163,16 +1158,13 @@ VALUES ((SELECT id FROM aluno WHERE nome = 'Mario'), '2012-05-02', '2012-05-12',
        ((SELECT id FROM aluno WHERE nome = 'Pedro'), '2012-05-07', '2012-05-17', 20,'S'),
        ((SELECT id FROM aluno WHERE nome = 'Pedro'), '2012-05-08', '2012-05-18', 5,'S');
 
-CREATE TABLE emprestimo_livro (
+CREATE TABLE IF NOT EXISTS emprestimo_livro (
     id_emprestimo INT NOT NULL,
     id_livro INT NOT NULL,
     CONSTRAINT pk_elv_idemprestimoidlivro PRIMARY KEY (id_emprestimo, id_livro),
     CONSTRAINT fk_elv_idemprestimo FOREIGN KEY (id_emprestimo) REFERENCES emprestimo (id),
     CONSTRAINT fk_elv_idlivro FOREIGN KEY (id_livro) REFERENCES livro (id)
 );
-
-SELECT * FROM emprestimo
-    select * from aluno where id = 4
 
 INSERT INTO emprestimo_livro (id_emprestimo, id_livro)
 VALUES (
@@ -1447,3 +1439,78 @@ GROUP BY
     a.nome
 HAVING
     SUM(e.valor) > 7;
+
+SELECT UPPER(nome)
+FROM aluno
+ORDER BY nome;
+
+SELECT *
+FROM emprestimo
+WHERE EXTRACT(month FROM data_emprestimo) = '04' AND EXTRACT(year FROM data_emprestimo) = '2012';
+
+SELECT
+    id,
+    id_aluno,
+    data_emprestimo,
+    data_devolucao,
+    valor,
+    CASE devolvido
+        WHEN 'S' THEN 'Devolução Completa'
+        ELSE 'Em atraso'
+    END AS situacao
+FROM emprestimo;
+
+SELECT SUBSTRING(nome, 5, 10)
+FROM autor;
+
+SELECT
+    valor,
+    CASE EXTRACT(month FROM data_emprestimo)
+        WHEN '01' THEN 'Janeiro'
+        WHEN '02' THEN 'Fevereiro'
+        WHEN '03' THEN 'Março'
+        WHEN '04' THEN 'Abril'
+        WHEN '05' THEN 'Maio'
+        WHEN '06' THEN 'Junho'
+        WHEN '07' THEN 'Julho'
+        WHEN '08' THEN 'Agosto'
+        WHEN '09' THEN 'Setembro'
+        WHEN '10' THEN 'Outubro'
+    END AS mes_emprestimo
+FROM emprestimo;
+
+SELECT
+    data_emprestimo,
+    valor
+FROM emprestimo
+WHERE
+    valor > (
+        SELECT AVG(valor)
+        FROM emprestimo
+    );
+
+SELECT
+    data_emprestimo,
+    valor
+FROM
+    emprestimo
+WHERE id in (
+      SELECT
+          id_emprestimo
+      FROM
+          emprestimo_livro
+      GROUP BY
+          id_emprestimo
+      HAVING
+          COUNT(id_emprestimo) > 1
+    );
+
+SELECT
+    data_emprestimo,
+    valor
+FROM
+    emprestimo
+WHERE
+    valor < (
+        SELECT AVG(valor) FROM emprestimo
+    )
