@@ -172,3 +172,140 @@ CREATE OR REPLACE TRIGGER log_pedido_trigger
 DELETE FROM pedido WHERE id = 16;
 
 SELECT * FROM pedidos_apagados;
+
+-- domínios
+-- ids
+CREATE DOMAIN idcurto AS SMALLINT;
+CREATE DOMAIN idmedio AS INTEGER;
+CREATE DOMAIN idlongo AS BIGINT;
+
+--caracteres
+CREATE DOMAIN sigla AS varchar(3);
+CREATE DOMAIN codigo AS VARCHAR(10);
+CREATE DOMAIN nome_curto AS VARCHAR(15);
+CREATE DOMAIN nome_medio AS VARCHAR(30);
+CREATE DOMAIN nome_longo AS VARCHAR(50);
+
+--data
+CREATE DOMAIN data AS DATE;
+CREATE DOMAIN hora AS TIME;
+CREATE DOMAIN data_hora AS TIMESTAMP;
+
+--numericos
+CREATE DOMAIN moeda AS NUMERIC(10, 2);
+CREATE DOMAIN float_curto AS NUMERIC(6,2);
+CREATE DOMAIN float_medio AS NUMERIC(10,2);
+CREATE DOMAIN float_longo AS NUMERIC(15,2);
+
+-- O objetivo deste exercício é alterar os tipos de dados dos atributos de todas as tabelas,
+-- considerando os domínios criados anteriormente. Caso julgue necessário, faça a criação de novos domínios
+DROP VIEW IF EXISTS cliente_dados;
+DROP VIEW IF EXISTS cliente_profissao;
+DROP VIEW IF EXISTS municipio_dados;
+DROP VIEW IF EXISTS pedido_dados;
+DROP VIEW IF EXISTS pedido_produto_dados;
+DROP VIEW IF EXISTS produto_dados;
+DROP VIEW IF EXISTS transportadora_dados;
+
+ALTER TABLE cliente
+ALTER COLUMN nome
+TYPE nome_longo;
+
+ALTER TABLE fornecedor
+ALTER COLUMN nome
+TYPE nome_longo;
+
+ALTER TABLE municipio
+ALTER COLUMN nome
+TYPE nome_longo;
+
+ALTER TABLE nacionalidade
+ALTER COLUMN nome
+TYPE nome_longo;
+
+ALTER TABLE produto
+ALTER COLUMN nome
+TYPE nome_longo;
+
+ALTER TABLE profissao
+ALTER COLUMN nome
+TYPE nome_longo;
+
+ALTER TABLE vendedor
+ALTER COLUMN nome
+TYPE nome_longo;
+
+--roles
+CREATE ROLE gerente;
+CREATE ROLE estagiario;
+
+GRANT SELECT, INSERT, UPDATE,  DELETE --GRANT concede permissoes a uma role
+    ON bairro, cliente, complemento, fornecedor, vendedor, municipio, transportadora, nacionalidade, profissao
+    TO gerente;
+GRANT ALL
+    ON ALL SEQUENCES IN
+    SCHEMA public
+    TO gerente;
+REVOKE SELECT ON bairro FROM gerente; --REMOVE PERMISSOES
+
+GRANT SELECT
+    ON cliente_dados, pedido_produto_dados
+    TO estagiario;
+
+CREATE ROLE leo LOGIN PASSWORD 'postgres' IN ROLE gerente;
+CREATE ROLE gabriel LOGIN PASSWORD 'postgres' IN ROLE estagiario;
+
+-- Exercícios usuários e permissões
+-- 1. Crie um novo papel chamado “atendente”
+CREATE ROLE atendente;
+-- 2. Defina somente permissões para o novo papel poder selecionar e incluir novos pedidos (tabelas pedido e pedido_produto). O restante do acesso deve estar bloqueado
+GRANT SELECT, INSERT
+    ON pedido, pedido_produto
+    TO atendente;
+-- 3. Crie um novo usuário associado ao novo papel
+CREATE ROLE leoA LOGIN PASSWORD 'postgres' IN ROLE atendente;
+-- 4. Realize testes para verificar se as permissões foram aplicadas corretamente
+SELECT * FROM pedido;
+SELECT * FROM bairro;
+
+-- transacoes
+CREATE TABLE IF NOT EXISTS conta (
+    id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente nome_medio NOT NULL,
+    saldo moeda NOT NULL DEFAULT 0
+);
+
+INSERT INTO  conta (cliente, saldo)
+VALUES ('Cliente 1', 1000), ('Cliente 2', 500);
+
+SELECT * FROM conta;
+
+UPDATE conta
+SET saldo = saldo - 100
+WHERE id = 1;
+
+UPDATE conta
+SET saldo = saldo + 100
+WHERE id = 2;
+
+SELECT * FROM conta;
+BEGIN;
+    UPDATE conta
+    SET saldo = saldo - 100
+    WHERE id = 1;
+
+    UPDATE conta
+    SET saldo = saldo + 100
+    WHERE id = 2;
+ROLLBACK;
+
+SELECT * FROM conta;
+BEGIN;
+    UPDATE conta
+    SET saldo = saldo - 100
+    WHERE id = 1;
+
+    UPDATE conta
+    SET saldo = saldo + 100
+    WHERE id = 2;
+COMMIT;

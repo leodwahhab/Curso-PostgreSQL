@@ -866,6 +866,10 @@ select * from cliente_profissao where profissao = 'Professor';
 --exercicios views
 
 --1. O nome, a profissão, a nacionalidade, o complemento, o município, a unidade de federação, o bairro, o CPF,o RG, a data de nascimento, o gênero (mostrar “Masculino” ou “Feminino”), o logradouro, o número e as observações dos clientes.
+ALTER TABLE bairro
+ALTER COLUMN nome
+TYPE nome_medio;
+
 create view cliente_dados as
 select 
 	c.nome as cliente, 
